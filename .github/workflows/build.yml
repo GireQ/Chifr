@@ -1,5 +1,6 @@
 name: Build APK
-on: [push]
+on: [push, workflow_dispatch]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -7,22 +8,40 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python 3.9
         uses: actions/setup-python@v5
         with:
-          python-version: 3.9
+          python-version: "3.9"
 
-      - name: Install Buildozer
+      - name: Install system dependencies
         run: |
-          pip install buildozer
-          sudo apt-get install -y python3-pip autoconf libtool pkg-config zlib1g-dev
+          sudo apt-get update
+          sudo apt-get install -y \
+            zlib1g-dev \
+            autoconf \
+            libtool \
+            pkg-config \
+            git \
+            unzip
+
+      - name: Install Buildozer and Cython
+        run: |
+          pip install --upgrade pip wheel
+          pip install buildozer==1.5.0
+          pip install cython==0.29.36
 
       - name: Build APK
         run: |
           buildozer -v android debug
+        env:
+          # Фиксируем версии Android tools
+          ACCEPT_LICENSE: "android-sdk-license.*"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app
-          path: bin/*.apk
+          path: |
+            bin/*.apk
+            bin/*.aab
+          retention-days: 1
