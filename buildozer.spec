@@ -10,5 +10,6 @@ android.permissions = INTERNET
 orientation = portrait
 android.minapi = 21
 android.ndk = 23b
+android.build_tools = 34.0.0
 source.include_main = True
 source.main = shift_2.py  # Укажите ваше имя файла
