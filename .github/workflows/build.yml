@@ -1,13 +1,13 @@
 name: Build APK
 on: 
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
       - name: Checkout code
@@ -17,7 +17,29 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.9"
-          cache: 'pip'
+
+      - name: Setup Android environment
+        run: |
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "PATH=$ANDROID_HOME/cmdline-tools/bin:$PATH" >> $GITHUB_ENV
+          mkdir -p $ANDROID_HOME
+
+      - name: Install Command-line Tools
+        run: |
+          cd $ANDROID_HOME
+          wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
+          unzip commandlinetools-linux-*_latest.zip -d cmdline-tools
+          rm commandlinetools-linux-*_latest.zip
+
+      - name: Accept Android licenses
+        run: |
+          yes | sdkmanager --licenses
+
+      - name: Install Android tools
+        run: |
+          sdkmanager "platform-tools" "build-tools;34.0.0"
+          sdkmanager "platforms;android-34"
+          sdkmanager "ndk;25.2.9519653"
 
       - name: Install system dependencies
         run: |
@@ -29,25 +51,7 @@ jobs:
             pkg-config \
             git \
             unzip \
-            android-sdk \
             adb
-
-      - name: Setup Android environment
-        run: |
-          echo "ANDROID_HOME=/usr/lib/android-sdk" >> $GITHUB_ENV
-          echo "PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Accept Android licenses
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-
-      - name: Install Build tools
-        run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
-            "build-tools;34.0.0" \
-            "platform-tools" \
-            "platforms;android-34" \
-            "ndk;25.2.9519653"
 
       - name: Install Python dependencies
         run: |
@@ -59,14 +63,10 @@ jobs:
         run: |
           buildozer -v android clean
           buildozer -v android debug
-        env:
-          ACCEPT_LICENSE: "android-sdk-license.*"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: |
-            bin/*.apk
-            bin/*.aab
+          path: bin/*.apk
           retention-days: 1
