@@ -22,7 +22,12 @@ jobs:
             libtool \
             pkg-config \
             git \
-            unzip
+            unzip \
+            android-sdk
+
+      - name: Accept Android licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
       - name: Install Buildozer and Cython
         run: |
@@ -34,14 +39,10 @@ jobs:
         run: |
           buildozer -v android debug
         env:
-          # Фиксируем версии Android tools
           ACCEPT_LICENSE: "android-sdk-license.*"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app
-          path: |
-            bin/*.apk
-            bin/*.aab
-          retention-days: 1
+          path: bin/*.apk
