@@ -1,9 +1,14 @@
 name: Build APK
-on: [push, workflow_dispatch]
+on: 
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -12,10 +17,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.9"
+          cache: 'pip'
 
       - name: Install system dependencies
         run: |
-          sudo apt-get update
+          sudo apt-get update -qq
           sudo apt-get install -y \
             zlib1g-dev \
             autoconf \
@@ -23,20 +29,35 @@ jobs:
             pkg-config \
             git \
             unzip \
-            android-sdk
+            android-sdk \
+            adb
+
+      - name: Setup Android environment
+        run: |
+          echo "ANDROID_HOME=/usr/lib/android-sdk" >> $GITHUB_ENV
+          echo "PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
 
       - name: Accept Android licenses
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
-      - name: Install Buildozer and Cython
+      - name: Install Build tools
         run: |
-          pip install --upgrade pip wheel
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "build-tools;34.0.0" \
+            "platform-tools" \
+            "platforms;android-34" \
+            "ndk;25.2.9519653"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip wheel
           pip install buildozer==1.5.0
           pip install cython==0.29.36
 
       - name: Build APK
         run: |
+          buildozer -v android clean
           buildozer -v android debug
         env:
           ACCEPT_LICENSE: "android-sdk-license.*"
@@ -44,5 +65,8 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app
-          path: bin/*.apk
+          name: app-release
+          path: |
+            bin/*.apk
+            bin/*.aab
+          retention-days: 1
