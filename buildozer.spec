@@ -11,3 +11,5 @@ orientation = portrait
 android.sdk = 24
 android.minapi = 21
 android.ndk = 23b
+source.include_main = True
+source.main = shift_2.py  # Укажите ваше имя файла
