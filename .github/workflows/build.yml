@@ -1,1 +1,22 @@
-
+name: Build APK
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+      - name: Install Buildozer
+        run: |
+          pip install buildozer
+          sudo apt-get install -y python3-pip autoconf libtool pkg-config zlib1g-dev
+      - name: Build APK
+        run: |
+          buildozer -v android debug
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: app
+          path: bin/*.apk
