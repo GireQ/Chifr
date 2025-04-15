@@ -62,7 +62,7 @@ jobs:
           pip install cython==0.29.36
 
       - name: Clean build
-        run: bulldozer -v android clean
+        run: buildozer -v android clean
 
       - name: Build APK
         run: |
