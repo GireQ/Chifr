@@ -20,18 +20,20 @@ jobs:
 
       - name: Setup Android environment
         run: |
-          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "PATH=$ANDROID_HOME/cmdline-tools/bin:$PATH" >> $GITHUB_ENV
-          mkdir -p $ANDROID_HOME
+          ANDROID_HOME="$HOME/android-sdk"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          mkdir -p "$ANDROID_HOME"
 
       - name: Install Command-line Tools
         run: |
-          cd $ANDROID_HOME
-          wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
-          unzip commandlinetools-linux-*_latest.zip -d cmdline-tools
+          cd "$ANDROID_HOME"
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
+          unzip -q commandlinetools-linux-*_latest.zip -d cmdline-tools
+          mv cmdline-tools/cmdline-tools cmdline-tools/latest
           rm commandlinetools-linux-*_latest.zip
 
-      - name: Accept Android licenses
+      - name: Accept licenses
         run: |
           yes | sdkmanager --licenses
 
